@@ -66,8 +66,7 @@ class VGG(nn.Module):
         x = self.block4(x)
         x = self.block5(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.classifier(x)
-        out = nn.functional.softmax(x, dim=1)
+        out = self.classifier(x)
 
         return out
 
@@ -80,7 +79,8 @@ def VGG16():
 
 def predict(model, image_name):
     test_image = Image.open(image_name)
-    # 由于训练的时候还有一个参数，是batch_size,而推理的时候没有，所以我们为了保持维度统一，就得使用.unsqueeze(0)来拓展维度
+    # 由于训练的时候还有一个参数，是batch_size,而推理的时候没有，
+    # 所以我们为了保持维度统一，就得使用.unsqueeze(0)来拓展维度
     test_image_tensor = pred_transform(test_image).unsqueeze(0)
 
     test_image_tensor = test_image_tensor.to(device)
@@ -89,7 +89,11 @@ def predict(model, image_name):
         model.eval()
         out = model(test_image_tensor)
         print(out)
-        score, cls = torch.max(out, 1)
+        # 执行softmax
+        ps = torch.exp(out)
+        ps = ps / torch.sum(ps)
+
+        score, cls = ps.topk(1, dim=1)
         print(score)
 
     return idx_to_class[cls.item()], score.item()

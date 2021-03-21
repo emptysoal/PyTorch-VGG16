@@ -107,8 +107,7 @@ class VGG(nn.Module):
         x = self.block4(x)
         x = self.block5(x)
         x = torch.flatten(x, start_dim=1)
-        x = self.classifier(x)
-        out = nn.functional.softmax(x, dim=1)
+        out = self.classifier(x)
 
         return out
 
